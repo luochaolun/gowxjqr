@@ -29,14 +29,14 @@ func RandomStr(length int) []byte {
 func GenEcdhKey() (bool, []byte, []byte) {
 	h, err := syscall.LoadLibrary("./dll/ecdh_x64.dll")
 	if err != nil {
-		return false, []byte(""), []byte("")
+		return false, []byte{}, []byte{}
 	}
 	defer syscall.FreeLibrary(h)
 
 	proc, err := syscall.GetProcAddress(h, "GenEcdh")
 	if err != nil {
 		fmt.Println("GetProcAddress error!")
-		return false, []byte(""), []byte("")
+		return false, []byte{}, []byte{}
 	}
 
 	priKey := make([]byte, 2048)
@@ -51,14 +51,14 @@ func GenEcdhKey() (bool, []byte, []byte) {
 
 	r, k, err := syscall.Syscall6(uintptr(proc),
 		5,
-		713,
+		uintptr(713),
 		pri,
 		pLenPri,
 		pub,
 		pLenPub,
 		0)
 	if err != nil {
-		return false, []byte(""), []byte("")
+		return false, []byte{}, []byte{}
 	}
 	fmt.Printf("%+v\n", priKey)
 	fmt.Printf("%+v\n", pubKey)
@@ -69,7 +69,7 @@ func GenEcdhKey() (bool, []byte, []byte) {
 	fmt.Println(k)
 	fmt.Println("-----------")
 
-	return false, []byte(""), []byte("")
+	return false, []byte{}, []byte{}
 }
 
 func main() {

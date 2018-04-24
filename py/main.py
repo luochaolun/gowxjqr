@@ -26,6 +26,8 @@ def GenEcdhKey():
         print(EcdhPriKey)
         print(EcdhPubKey)
         print('我们'.encode('utf-8'))
+        print(lenPri.value)
+        print(lenPub.value)
     return bRet
 
 def main():
