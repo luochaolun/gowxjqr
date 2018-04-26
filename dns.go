@@ -1,64 +1,88 @@
 package main
 
 import (
+	"compress/flate"
 	"fmt"
-	//"io"
+	"github.com/PuerkitoBio/goquery"
 	"io/ioutil"
 	"net/http"
-	//"compress/gzip"
+	"strings"
 )
+
+// 解码
+func Gzdecode(data string) string {
+	if data == "" {
+		return ""
+	}
+	r := flate.NewReader(strings.NewReader(data))
+	defer r.Close()
+	out, err := ioutil.ReadAll(r)
+	if err != nil {
+		fmt.Errorf("%s\n", err)
+		return ""
+	}
+	return string(out)
+}
 
 func GET(targetUrl string) (bool, string) {
 	client := &http.Client{}
-	reqest, err := http.NewRequest("GET", targetUrl, nil) //建立一个请求
+	req, err := http.NewRequest("GET", targetUrl, nil) //建立一个请求
 	if err != nil {
 		return false, ""
 	}
-	//Add 头协议
-	reqest.Header.Set("Accept", "text/xml")
-	//reqest.Header.Add("Accept-Language", "ja,zh-CN;q=0.8,zh;q=0.6")
-	//reqest.Header.Del("Accept-Encoding")
-	reqest.Header.Set("Accept-Encoding", "gzip")
-	//reqest.Header.Add("Connection", "keep-alive")
-	//reqest.Header.Add("Cookie", "设置cookie")
-	reqest.Header.Add("Referer", "http://dns.weixin.qq.com/")
-	//reqest.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0")
-	response, err := client.Do(reqest) //提交
-	defer response.Body.Close()
 
-	cookies := response.Cookies()
+	req.Header.Add("Accept-Encoding", "gzip, deflate")
+	req.Header.Add("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1")
+	resp, err := client.Do(req) //提交
+	defer resp.Body.Close()
+
+	//fmt.Println(resp.Header)
+	/*cookies := resp.Cookies()
 	for _, cookie := range cookies {
 		fmt.Println("cookie:", cookie)
-	}
+	}*/
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return false, ""
 	}
-	/*reader, _ := gzip.NewReader(response.Body)
-	var body string
-	for {
-		buf := make([]byte, 1024)
-		n, err := reader.Read(buf)
 
-		if err != nil && err != io.EOF {
-			 panic(err)
-		}
+	html := string(body)
+	if resp.Header.Get("Content-Encoding") == "deflate" {
+		html = Gzdecode(html)
+	}
 
-		if n == 0 {
-			 break
-		}
-		body += string(buf)
-	}*/
-
-	return true, string(body)
+	return true, html
 }
 
-func main() {
+func getDns() (bool, []string, []string) {
+	sDns := []string{}
+	lDns := []string{}
+
 	bRet, html := GET("http://dns.weixin.qq.com/cgi-bin/micromsg-bin/newgetdns")
 	if !bRet {
-		fmt.Println("访问出错！")
-		return
+		return false, sDns, lDns
 	}
-	fmt.Println(html)
+	html = strings.Replace(html, "domain", "div", -1)
+	html = strings.Replace(html, "name=", "class=", -1)
+	html = strings.Replace(html, ".weixin.qq.com", "weixinqqcom", -1)
+	//fmt.Println(html)
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	if err != nil {
+		return false, sDns, lDns
+	}
+
+	doc.Find("div.shortweixinqqcom ip").Each(func(_ int, s *goquery.Selection) {
+		sDns = append(sDns, s.Text())
+	})
+
+	doc.Find("div.longweixinqqcom ip").Each(func(_ int, s *goquery.Selection) {
+		lDns = append(lDns, s.Text())
+	})
+
+	if len(sDns) == 0 || len(lDns) == 0 {
+		return false, sDns, lDns
+	}
+
+	return true, sDns, lDns
 }

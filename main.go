@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+var (
+	sDns   []string //短链接DNS
+	lDns   []string //长链接DNS
+	priKey []byte   //私钥
+	pubKey []byte   //公钥
+)
+
 //RandomStr 随机生成字符串
 func RandomStr(length int) []byte {
 	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -28,14 +35,23 @@ func GetMd5(src string) string {
 }
 
 func main() {
-	bRet, priKey, pubKey := GenEcdhKey()
+	var bRet bool
+	bRet, sDns, lDns = getDns()
+	if !bRet {
+		fmt.Println("提取长、短链接DNS出错！")
+		return
+	}
+	fmt.Println(sDns)
+	fmt.Println(lDns)
+
+	bRet, priKey, pubKey = GenEcdhKey()
 	if !bRet {
 		fmt.Println("初始化出错！")
 		return
 	}
 
 	fmt.Println(priKey)
-	//fmt.Println(pubKey)
+	fmt.Println(pubKey)
 
 	var l int32 = 16
 	var nid int32 = 713
