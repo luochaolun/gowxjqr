@@ -1,11 +1,8 @@
 package main
 
 import (
-	"crypto/md5"
 	"fmt"
-	"math/rand"
-	"strings"
-	"time"
+	proto "github.com/golang/protobuf/proto"
 )
 
 var (
@@ -14,25 +11,6 @@ var (
 	priKey []byte   //私钥
 	pubKey []byte   //公钥
 )
-
-//RandomStr 随机生成字符串
-func RandomStr(length int) []byte {
-	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	bytes := []byte(str)
-	result := []byte{}
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < length; i++ {
-		result = append(result, bytes[r.Intn(len(bytes))])
-	}
-	return result
-}
-
-func GetMd5(src string) string {
-	data := []byte(strings.TrimSpace(src))
-	has := md5.Sum(data)
-	ret := fmt.Sprintf("%x", has) //将[]byte转成16进制
-	return ret
-}
 
 func main() {
 	var bRet bool
@@ -121,6 +99,22 @@ func main() {
 		RealCountry:     &realCountry,
 		Unknown22:       &uTwo,
 	}
-	fmt.Println(accountRequest)
-	fmt.Println(deviceRequest)
+
+	accData, err := proto.Marshal(&accountRequest)
+	if err != nil {
+		fmt.Println("序列化accountRequest出错！")
+		return
+	}
+	fmt.Println("-------------accData-------------")
+	fmt.Println(accData)
+	fmt.Println("-------------accData-------------")
+
+	devData, err := proto.Marshal(&deviceRequest)
+	if err != nil {
+		fmt.Println("序列化deviceRequest出错！")
+		return
+	}
+	fmt.Println("-------------devData-------------")
+	fmt.Println(devData)
+	fmt.Println("-------------devData-------------")
 }

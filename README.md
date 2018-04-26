@@ -27,3 +27,5 @@ systemctl start wxjqr.service
 systemctl stop wxjqr.service
 
 systemctl reload wxjqr.service
+
+go run main.go dns.go ecdh.go mm.pb.go jiaMiJieMi.go
