@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	mrand "math/rand"
@@ -74,8 +75,11 @@ func RsaEncrypt(origData []byte) ([]byte, error) {
 	return rsa.EncryptPKCS1v15(rand.Reader, pub, origData) //RSA算法加密
 }
 
-/*func main() {
-	a, _ := RsaEncrypt([]byte("0"))
-	fmt.Println(a)
+func main() {
+	encData, _ := RsaEncrypt([]byte("0"))
+	fmt.Println(encData)
+
+	// 将加密信息转换为16进制
+	fmt.Println(hex.EncodeToString(encData))
 	return
-}*/
+}
