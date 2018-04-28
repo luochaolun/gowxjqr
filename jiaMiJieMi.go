@@ -6,23 +6,12 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
-	"errors"
 	"fmt"
+	"math/big"
 	mrand "math/rand"
 	"strings"
 	"time"
 )
-
-var RSAPublicKey = []byte(`
------BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDZsfv1qscqYdy4vY+P4e3cAtmv
-ppXQcRvrF1cB4drkv0haU24Y7m5qYtT52Kr539RdbKKdLAM6s20lWy7+5C0Dgacd
-wYWd/7PeCELyEipZJL07Vro7Ate8Bfjya+wltGK9+XNUIHiumUKULW4KDx21+1NL
-AUeJ6PeW+DAkmJWF6QIDAQAB
------END PUBLIC KEY-----
-`)
 
 //RandomStr 随机生成字符串
 func RandomStr(length int) []byte {
@@ -52,16 +41,41 @@ func DoZlibCompress(src []byte) []byte {
 	return in.Bytes()
 }
 
+func fromBase10(base10 string) *big.Int {
+	i, ok := new(big.Int).SetString(base10, 10)
+	if !ok {
+		panic("bad number: " + base10)
+	}
+	return i
+}
+
+/*
+func PKCS1v15(raw string, k *rsa.PrivateKey) {
+	// 加密数据
+	encData, err := rsa.EncryptPKCS1v15(rand.Reader, &k.PublicKey, []byte(raw))
+	CheckErr(err)
+
+	// 将加密信息转换为16进制
+	fmt.Println(hex.EncodeToString(encData))
+
+	// 解密数据
+	decData, err := rsa.DecryptPKCS1v15(rand.Reader, k, encData)
+	CheckErr(err)
+
+	fmt.Println(string(decData))
+}
+*/
 // Rsa加密
 func RsaEncrypt(origData []byte) ([]byte, error) {
-	block, _ := pem.Decode(RSAPublicKey) //将密钥解析成公钥实例
-	if block == nil {
-		return nil, errors.New("public key error")
+	pub := &rsa.PublicKey{
+		N: fromBase10("28451871049931367000280397980315941493900129515342596978911559687990314360389032587440776677027204713391568456885285049251487633608731647183467169168881911527826624481487591327384831906488048909401577611922812327263514418984933031922276030058409673698944286410157636442703854841054883577764295855609055424607908529646258978732803548772153882771376598661378357620270911570592259824592983240228765987019924029891220246156951679001803386278265765263294008064317769795655401414404284566271952991617207133906501324250043672867665318381453808219063463146255586300194092972814576468544100433701118961141427623372047206165351"),
+		E: 65537,
 	}
-	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes) //解析pem.Decode()返回的Block指针实例
-	if err != nil {
-		return nil, err
-	}
-	pub := pubInterface.(*rsa.PublicKey)
 	return rsa.EncryptPKCS1v15(rand.Reader, pub, origData) //RSA算法加密
 }
+
+/*func main() {
+	a, _ := RsaEncrypt([]byte("0"))
+	fmt.Println(a)
+	return
+}*/
