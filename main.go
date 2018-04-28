@@ -117,4 +117,9 @@ func main() {
 	fmt.Println("-------------devData-------------")
 	fmt.Println(devData)
 	fmt.Println("-------------devData-------------")
+
+	reqAccount, _ := CompressAndRsaEnc(accData)
+	reqDevice, _ := CompressAndAesEnc(devData, login_aes_key)
+	fmt.Println(reqAccount)
+	fmt.Println(reqDevice)
 }
