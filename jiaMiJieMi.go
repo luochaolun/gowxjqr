@@ -45,7 +45,7 @@ func DoZlibCompress(src []byte) []byte {
 func fromBase10(base10 string) *big.Int {
 	i, ok := new(big.Int).SetString(base10, 10)
 	if !ok {
-		panic("bad number: " + base10)
+		return big.NewInt(0)
 	}
 	return i
 }
@@ -80,10 +80,16 @@ func RsaEncrypt(origData []byte) ([]byte, error) {
 	return rsa.EncryptPKCS1v15(rand.Reader, pub, origData)
 }
 
-func main() {
-	encData, _ := RsaEncrypt([]byte("0"))
+// 先压缩后RSA加密
+func CompressAndRsaEnc(origData []byte) ([]byte, error) {
+	compressData := DoZlibCompress(origData)
+	return RsaEncrypt(compressData)
+}
+
+/*func main() {
+	encData, _ := CompressAndRsaEnc([]byte("0"))
 	fmt.Println(encData)
 
 	fmt.Println(hex.EncodeToString(encData))
 	return
-}
+}*/
